@@ -1,0 +1,1198 @@
+{
+  "project": {
+    "name": "SyntyChatServer",
+    "root": "/data/data/com.termux/files/home/Projects/SyntyChatServer",
+    "compiled_at": "2026-10-11 06:23:04",
+    "build_duration_sec": 0.025,
+    "stats": {
+      "total_files": 7,
+      "total_loc": 170,
+      "total_classes": 6,
+      "total_functions": 9,
+      "avg_complexity": 1.33
+    }
+  },
+  "symbols": {
+    "module:build_chat_server.py": {
+      "id": "module:build_chat_server.py",
+      "name": "build_chat_server.py",
+      "type": "module",
+      "file": "build_chat_server.py",
+      "docstring": "",
+      "loc": 106,
+      "imports": [
+        {
+          "module": "os",
+          "alias": "os",
+          "line": 1
+        },
+        {
+          "module": "syntycode.sdk.GraphContext",
+          "alias": "GraphContext",
+          "line": 2
+        },
+        {
+          "module": "syntycode.sdk.Node",
+          "alias": "Node",
+          "line": 2
+        },
+        {
+          "module": "syntycode.sdk.Function",
+          "alias": "Function",
+          "line": 2
+        },
+        {
+          "module": "syntycode.sdk.ClassNode",
+          "alias": "ClassNode",
+          "line": 2
+        },
+        {
+          "module": "syntycode.sdk.Variable",
+          "alias": "Variable",
+          "line": 2
+        },
+        {
+          "module": "syntycode.sdk.Call",
+          "alias": "Call",
+          "line": 2
+        },
+        {
+          "module": "syntycode.sdk.Identifier",
+          "alias": "Identifier",
+          "line": 2
+        },
+        {
+          "module": "syntycode.sdk.Block",
+          "alias": "Block",
+          "line": 2
+        },
+        {
+          "module": "syntycode.sdk.Loop",
+          "alias": "Loop",
+          "line": 2
+        },
+        {
+          "module": "syntycode.sdk.Condition",
+          "alias": "Condition",
+          "line": 2
+        }
+      ],
+      "callers": []
+    },
+    "build_chat_server.py:build_chat_server": {
+      "name": "build_chat_server",
+      "full_name": "build_chat_server.py:build_chat_server",
+      "parent_class": null,
+      "type": "function",
+      "file": "build_chat_server.py",
+      "line": 4,
+      "end_line": 100,
+      "is_async": false,
+      "signature": "def build_chat_server() -> None",
+      "args": [],
+      "returns": "None",
+      "decorators": [],
+      "complexity": 2,
+      "docstring": "",
+      "calls": [
+        "print",
+        "GraphContext",
+        "Node",
+        "add_node",
+        "ClassNode",
+        "add_child",
+        "Function",
+        "Variable",
+        "Call",
+        "Loop",
+        "add_statement",
+        "Condition",
+        "Identifier",
+        "Block"
+      ],
+      "source": "def build_chat_server():\n    print(\"\ud83d\ude80 Initializing Zero-Syntax Graph Context for 'ChatCore'...\")\n    with GraphContext(\"ChatCore\") as ctx:\n        \n        # ---------------------------------------------------------\n        # FILE 1: client.py\n        # ---------------------------------------------------------\n        file_client = Node(\"FileNode\", \"client\")\n        ctx.add_node(file_client)\n        \n        cls_client = ClassNode(\"Client\")\n        file_client.add_child(cls_client)\n        \n        # def __init__(self, client_id): self.client_id = client_id\n        init_client = Function(\"__init__\", [\"self\", \"client_id\"])\n        init_client.properties[\"is_method\"] = True\n        var_client_id = Variable(\"self.client_id\", Identifier(\"client_id\"))\n        init_client.add_child(var_client_id)\n        cls_client.add_child(init_client)\n        \n        # def send(self, message): print(message)\n        send_client = Function(\"send\", [\"self\", \"message\"])\n        send_client.properties[\"is_method\"] = True\n        print_call = Call(\"print\", [\"message\"])\n        send_client.add_child(print_call)\n        cls_client.add_child(send_client)\n        \n        # ---------------------------------------------------------\n        # FILE 2: room.py\n        # ---------------------------------------------------------\n        file_room = Node(\"FileNode\", \"room\")\n        ctx.add_node(file_room)\n        \n        cls_room = ClassNode(\"Room\")\n        file_room.add_child(cls_room)\n        \n        # def __init__(self, name): self.name = name; self.clients = []\n        init_room = Function(\"__init__\", [\"self\", \"name\"])\n        init_room.properties[\"is_method\"] = True\n        init_room.add_child(Variable(\"self.name\", Identifier(\"name\")))\n        init_room.add_child(Variable(\"self.clients\", Node(\"ArrayNode\", \"array\")))\n        cls_room.add_child(init_room)\n        \n        # def add_client(self, client): self.clients.append(client)\n        add_client = Function(\"add_client\", [\"self\", \"client\"])\n        add_client.properties[\"is_method\"] = True\n        add_client.add_child(Call(\"self.clients.append\", [\"client\"]))\n        cls_room.add_child(add_client)\n        \n        # def broadcast(self, message): for c in self.clients: c.send(message)\n        broadcast = Function(\"broadcast\", [\"self\", \"message\"])\n        broadcast.properties[\"is_method\"] = True\n        loop = Loop(\"for\", \"c in self.clients\")\n        loop.add_statement(Call(\"c.send\", [\"message\"]))\n        broadcast.add_child(loop)\n        cls_room.add_child(broadcast)\n\n        # ---------------------------------------------------------\n        # FILE 3: server.py\n        # ---------------------------------------------------------\n        file_server = Node(\"FileNode\", \"server\")\n        ctx.add_node(file_server)\n        \n        cls_server = ClassNode(\"Server\")\n        file_server.add_child(cls_server)\n        \n        # def __init__(self): self.rooms = {}\n        init_server = Function(\"__init__\", [\"self\"])\n        init_server.properties[\"is_method\"] = True\n        init_server.add_child(Variable(\"self.rooms\", Node(\"DictNode\", \"dict\", {\"keys\": []})))\n        cls_server.add_child(init_server)\n        \n        # def create_room(self, name): self.rooms[name] = Room(name)\n        create_room = Function(\"create_room\", [\"self\", \"name\"])\n        create_room.properties[\"is_method\"] = True\n        create_room.add_child(Variable(\"self.rooms[name]\", Call(\"Room\", [\"name\"])))\n        cls_server.add_child(create_room)\n        \n        # def join_room(self, room_name, client):\n        #     target_room = self.rooms.get(room_name) # Using SAFE IndexAccess\n        #     if target_room:\n        #         target_room.add_client(client)\n        join_room = Function(\"join_room\", [\"self\", \"room_name\", \"client\"])\n        join_room.properties[\"is_method\"] = True\n        \n        safe_access = Node(\"IndexAccess\", \"idx\", {\"safe\": True})\n        safe_access.add_child(Identifier(\"self.rooms\"))\n        safe_access.add_child(Identifier(\"room_name\"))\n        \n        room_var = Variable(\"target_room\", safe_access)\n        \n        cond = Condition(Identifier(\"target_room\"), Block(\"true_block\").add_statement(Call(\"target_room.add_client\", [\"client\"])))\n        \n        join_room.add_child(room_var)\n        join_room.add_child(cond)\n        \n        cls_server.add_child(join_room)",
+      "callers": []
+    },
+    "module:src_ts/client.ts": {
+      "id": "module:src_ts/client.ts",
+      "name": "src_ts/client.ts",
+      "type": "module",
+      "file": "src_ts/client.ts",
+      "docstring": "",
+      "loc": 8,
+      "imports": [],
+      "callers": []
+    },
+    "src_ts/client.ts:Client": {
+      "name": "Client",
+      "full_name": "src_ts/client.ts:Client",
+      "type": "class",
+      "file": "src_ts/client.ts",
+      "line": 1,
+      "bases": [],
+      "decorators": [],
+      "docstring": "",
+      "methods": [],
+      "source": "class Client {",
+      "callers": []
+    },
+    "module:src_ts/room.ts": {
+      "id": "module:src_ts/room.ts",
+      "name": "src_ts/room.ts",
+      "type": "module",
+      "file": "src_ts/room.ts",
+      "docstring": "",
+      "loc": 14,
+      "imports": [],
+      "callers": []
+    },
+    "src_ts/room.ts:Room": {
+      "name": "Room",
+      "full_name": "src_ts/room.ts:Room",
+      "type": "class",
+      "file": "src_ts/room.ts",
+      "line": 1,
+      "bases": [],
+      "decorators": [],
+      "docstring": "",
+      "methods": [],
+      "source": "class Room {",
+      "callers": [
+        "src_py/server.py:Server.create_room"
+      ]
+    },
+    "module:src_ts/server.ts": {
+      "id": "module:src_ts/server.ts",
+      "name": "src_ts/server.ts",
+      "type": "module",
+      "file": "src_ts/server.ts",
+      "docstring": "",
+      "loc": 14,
+      "imports": [],
+      "callers": []
+    },
+    "src_ts/server.ts:Server": {
+      "name": "Server",
+      "full_name": "src_ts/server.ts:Server",
+      "type": "class",
+      "file": "src_ts/server.ts",
+      "line": 1,
+      "bases": [],
+      "decorators": [],
+      "docstring": "",
+      "methods": [],
+      "source": "class Server {",
+      "callers": []
+    },
+    "module:src_py/client.py": {
+      "id": "module:src_py/client.py",
+      "name": "src_py/client.py",
+      "type": "module",
+      "file": "src_py/client.py",
+      "docstring": "",
+      "loc": 6,
+      "imports": [],
+      "callers": []
+    },
+    "src_py/client.py:Client": {
+      "name": "Client",
+      "full_name": "src_py/client.py:Client",
+      "type": "class",
+      "file": "src_py/client.py",
+      "line": 1,
+      "end_line": 6,
+      "bases": [],
+      "decorators": [],
+      "docstring": "",
+      "methods": [
+        {
+          "name": "__init__",
+          "full_name": "src_py/client.py:Client.__init__",
+          "parent_class": "Client",
+          "type": "method",
+          "file": "src_py/client.py",
+          "line": 2,
+          "end_line": 3,
+          "is_async": false,
+          "signature": "def __init__(self, client_id) -> None",
+          "args": [
+            {
+              "name": "self",
+              "type": "Any"
+            },
+            {
+              "name": "client_id",
+              "type": "Any"
+            }
+          ],
+          "returns": "None",
+          "decorators": [],
+          "complexity": 1,
+          "docstring": "",
+          "calls": [],
+          "source": "    def __init__(self, client_id):\n        self.client_id = client_id",
+          "callers": []
+        },
+        {
+          "name": "send",
+          "full_name": "src_py/client.py:Client.send",
+          "parent_class": "Client",
+          "type": "method",
+          "file": "src_py/client.py",
+          "line": 5,
+          "end_line": 6,
+          "is_async": false,
+          "signature": "def send(self, message) -> None",
+          "args": [
+            {
+              "name": "self",
+              "type": "Any"
+            },
+            {
+              "name": "message",
+              "type": "Any"
+            }
+          ],
+          "returns": "None",
+          "decorators": [],
+          "complexity": 1,
+          "docstring": "",
+          "calls": [
+            "print"
+          ],
+          "source": "    def send(self, message):\n        print(message)",
+          "callers": [
+            "src_py/room.py:Room.broadcast"
+          ]
+        }
+      ],
+      "source": "class Client:\n    def __init__(self, client_id):\n        self.client_id = client_id\n\n    def send(self, message):\n        print(message)",
+      "callers": []
+    },
+    "src_py/client.py:Client.__init__": {
+      "name": "__init__",
+      "full_name": "src_py/client.py:Client.__init__",
+      "parent_class": "Client",
+      "type": "method",
+      "file": "src_py/client.py",
+      "line": 2,
+      "end_line": 3,
+      "is_async": false,
+      "signature": "def __init__(self, client_id) -> None",
+      "args": [
+        {
+          "name": "self",
+          "type": "Any"
+        },
+        {
+          "name": "client_id",
+          "type": "Any"
+        }
+      ],
+      "returns": "None",
+      "decorators": [],
+      "complexity": 1,
+      "docstring": "",
+      "calls": [],
+      "source": "    def __init__(self, client_id):\n        self.client_id = client_id",
+      "callers": []
+    },
+    "src_py/client.py:Client.send": {
+      "name": "send",
+      "full_name": "src_py/client.py:Client.send",
+      "parent_class": "Client",
+      "type": "method",
+      "file": "src_py/client.py",
+      "line": 5,
+      "end_line": 6,
+      "is_async": false,
+      "signature": "def send(self, message) -> None",
+      "args": [
+        {
+          "name": "self",
+          "type": "Any"
+        },
+        {
+          "name": "message",
+          "type": "Any"
+        }
+      ],
+      "returns": "None",
+      "decorators": [],
+      "complexity": 1,
+      "docstring": "",
+      "calls": [
+        "print"
+      ],
+      "source": "    def send(self, message):\n        print(message)",
+      "callers": [
+        "src_py/room.py:Room.broadcast"
+      ]
+    },
+    "module:src_py/room.py": {
+      "id": "module:src_py/room.py",
+      "name": "src_py/room.py",
+      "type": "module",
+      "file": "src_py/room.py",
+      "docstring": "",
+      "loc": 11,
+      "imports": [],
+      "callers": []
+    },
+    "src_py/room.py:Room": {
+      "name": "Room",
+      "full_name": "src_py/room.py:Room",
+      "type": "class",
+      "file": "src_py/room.py",
+      "line": 1,
+      "end_line": 11,
+      "bases": [],
+      "decorators": [],
+      "docstring": "",
+      "methods": [
+        {
+          "name": "__init__",
+          "full_name": "src_py/room.py:Room.__init__",
+          "parent_class": "Room",
+          "type": "method",
+          "file": "src_py/room.py",
+          "line": 2,
+          "end_line": 4,
+          "is_async": false,
+          "signature": "def __init__(self, name) -> None",
+          "args": [
+            {
+              "name": "self",
+              "type": "Any"
+            },
+            {
+              "name": "name",
+              "type": "Any"
+            }
+          ],
+          "returns": "None",
+          "decorators": [],
+          "complexity": 1,
+          "docstring": "",
+          "calls": [],
+          "source": "    def __init__(self, name):\n        self.name = name\n        self.clients = []",
+          "callers": []
+        },
+        {
+          "name": "add_client",
+          "full_name": "src_py/room.py:Room.add_client",
+          "parent_class": "Room",
+          "type": "method",
+          "file": "src_py/room.py",
+          "line": 6,
+          "end_line": 7,
+          "is_async": false,
+          "signature": "def add_client(self, client) -> None",
+          "args": [
+            {
+              "name": "self",
+              "type": "Any"
+            },
+            {
+              "name": "client",
+              "type": "Any"
+            }
+          ],
+          "returns": "None",
+          "decorators": [],
+          "complexity": 1,
+          "docstring": "",
+          "calls": [
+            "append"
+          ],
+          "source": "    def add_client(self, client):\n        self.clients.append(client)",
+          "callers": [
+            "src_py/server.py:Server.join_room"
+          ]
+        },
+        {
+          "name": "broadcast",
+          "full_name": "src_py/room.py:Room.broadcast",
+          "parent_class": "Room",
+          "type": "method",
+          "file": "src_py/room.py",
+          "line": 9,
+          "end_line": 11,
+          "is_async": false,
+          "signature": "def broadcast(self, message) -> None",
+          "args": [
+            {
+              "name": "self",
+              "type": "Any"
+            },
+            {
+              "name": "message",
+              "type": "Any"
+            }
+          ],
+          "returns": "None",
+          "decorators": [],
+          "complexity": 2,
+          "docstring": "",
+          "calls": [
+            "send"
+          ],
+          "source": "    def broadcast(self, message):\n        for c in self.clients:\n            c.send(message)",
+          "callers": []
+        }
+      ],
+      "source": "class Room:\n    def __init__(self, name):\n        self.name = name\n        self.clients = []\n\n    def add_client(self, client):\n        self.clients.append(client)\n\n    def broadcast(self, message):\n        for c in self.clients:\n            c.send(message)",
+      "callers": [
+        "src_py/server.py:Server.create_room"
+      ]
+    },
+    "src_py/room.py:Room.__init__": {
+      "name": "__init__",
+      "full_name": "src_py/room.py:Room.__init__",
+      "parent_class": "Room",
+      "type": "method",
+      "file": "src_py/room.py",
+      "line": 2,
+      "end_line": 4,
+      "is_async": false,
+      "signature": "def __init__(self, name) -> None",
+      "args": [
+        {
+          "name": "self",
+          "type": "Any"
+        },
+        {
+          "name": "name",
+          "type": "Any"
+        }
+      ],
+      "returns": "None",
+      "decorators": [],
+      "complexity": 1,
+      "docstring": "",
+      "calls": [],
+      "source": "    def __init__(self, name):\n        self.name = name\n        self.clients = []",
+      "callers": []
+    },
+    "src_py/room.py:Room.add_client": {
+      "name": "add_client",
+      "full_name": "src_py/room.py:Room.add_client",
+      "parent_class": "Room",
+      "type": "method",
+      "file": "src_py/room.py",
+      "line": 6,
+      "end_line": 7,
+      "is_async": false,
+      "signature": "def add_client(self, client) -> None",
+      "args": [
+        {
+          "name": "self",
+          "type": "Any"
+        },
+        {
+          "name": "client",
+          "type": "Any"
+        }
+      ],
+      "returns": "None",
+      "decorators": [],
+      "complexity": 1,
+      "docstring": "",
+      "calls": [
+        "append"
+      ],
+      "source": "    def add_client(self, client):\n        self.clients.append(client)",
+      "callers": [
+        "src_py/server.py:Server.join_room"
+      ]
+    },
+    "src_py/room.py:Room.broadcast": {
+      "name": "broadcast",
+      "full_name": "src_py/room.py:Room.broadcast",
+      "parent_class": "Room",
+      "type": "method",
+      "file": "src_py/room.py",
+      "line": 9,
+      "end_line": 11,
+      "is_async": false,
+      "signature": "def broadcast(self, message) -> None",
+      "args": [
+        {
+          "name": "self",
+          "type": "Any"
+        },
+        {
+          "name": "message",
+          "type": "Any"
+        }
+      ],
+      "returns": "None",
+      "decorators": [],
+      "complexity": 2,
+      "docstring": "",
+      "calls": [
+        "send"
+      ],
+      "source": "    def broadcast(self, message):\n        for c in self.clients:\n            c.send(message)",
+      "callers": []
+    },
+    "module:src_py/server.py": {
+      "id": "module:src_py/server.py",
+      "name": "src_py/server.py",
+      "type": "module",
+      "file": "src_py/server.py",
+      "docstring": "",
+      "loc": 11,
+      "imports": [],
+      "callers": []
+    },
+    "src_py/server.py:Server": {
+      "name": "Server",
+      "full_name": "src_py/server.py:Server",
+      "type": "class",
+      "file": "src_py/server.py",
+      "line": 1,
+      "end_line": 11,
+      "bases": [],
+      "decorators": [],
+      "docstring": "",
+      "methods": [
+        {
+          "name": "__init__",
+          "full_name": "src_py/server.py:Server.__init__",
+          "parent_class": "Server",
+          "type": "method",
+          "file": "src_py/server.py",
+          "line": 2,
+          "end_line": 3,
+          "is_async": false,
+          "signature": "def __init__(self) -> None",
+          "args": [
+            {
+              "name": "self",
+              "type": "Any"
+            }
+          ],
+          "returns": "None",
+          "decorators": [],
+          "complexity": 1,
+          "docstring": "",
+          "calls": [],
+          "source": "    def __init__(self):\n        self.rooms = {}",
+          "callers": []
+        },
+        {
+          "name": "create_room",
+          "full_name": "src_py/server.py:Server.create_room",
+          "parent_class": "Server",
+          "type": "method",
+          "file": "src_py/server.py",
+          "line": 5,
+          "end_line": 6,
+          "is_async": false,
+          "signature": "def create_room(self, name) -> None",
+          "args": [
+            {
+              "name": "self",
+              "type": "Any"
+            },
+            {
+              "name": "name",
+              "type": "Any"
+            }
+          ],
+          "returns": "None",
+          "decorators": [],
+          "complexity": 1,
+          "docstring": "",
+          "calls": [
+            "Room"
+          ],
+          "source": "    def create_room(self, name):\n        self.rooms[name] = Room(name)",
+          "callers": []
+        },
+        {
+          "name": "join_room",
+          "full_name": "src_py/server.py:Server.join_room",
+          "parent_class": "Server",
+          "type": "method",
+          "file": "src_py/server.py",
+          "line": 8,
+          "end_line": 11,
+          "is_async": false,
+          "signature": "def join_room(self, room_name, client) -> None",
+          "args": [
+            {
+              "name": "self",
+              "type": "Any"
+            },
+            {
+              "name": "room_name",
+              "type": "Any"
+            },
+            {
+              "name": "client",
+              "type": "Any"
+            }
+          ],
+          "returns": "None",
+          "decorators": [],
+          "complexity": 2,
+          "docstring": "",
+          "calls": [
+            "get",
+            "add_client"
+          ],
+          "source": "    def join_room(self, room_name, client):\n        target_room = self.rooms.get(room_name)\n        if target_room:\n            target_room.add_client(client)",
+          "callers": []
+        }
+      ],
+      "source": "class Server:\n    def __init__(self):\n        self.rooms = {}\n\n    def create_room(self, name):\n        self.rooms[name] = Room(name)\n\n    def join_room(self, room_name, client):\n        target_room = self.rooms.get(room_name)\n        if target_room:\n            target_room.add_client(client)",
+      "callers": []
+    },
+    "src_py/server.py:Server.__init__": {
+      "name": "__init__",
+      "full_name": "src_py/server.py:Server.__init__",
+      "parent_class": "Server",
+      "type": "method",
+      "file": "src_py/server.py",
+      "line": 2,
+      "end_line": 3,
+      "is_async": false,
+      "signature": "def __init__(self) -> None",
+      "args": [
+        {
+          "name": "self",
+          "type": "Any"
+        }
+      ],
+      "returns": "None",
+      "decorators": [],
+      "complexity": 1,
+      "docstring": "",
+      "calls": [],
+      "source": "    def __init__(self):\n        self.rooms = {}",
+      "callers": []
+    },
+    "src_py/server.py:Server.create_room": {
+      "name": "create_room",
+      "full_name": "src_py/server.py:Server.create_room",
+      "parent_class": "Server",
+      "type": "method",
+      "file": "src_py/server.py",
+      "line": 5,
+      "end_line": 6,
+      "is_async": false,
+      "signature": "def create_room(self, name) -> None",
+      "args": [
+        {
+          "name": "self",
+          "type": "Any"
+        },
+        {
+          "name": "name",
+          "type": "Any"
+        }
+      ],
+      "returns": "None",
+      "decorators": [],
+      "complexity": 1,
+      "docstring": "",
+      "calls": [
+        "Room"
+      ],
+      "source": "    def create_room(self, name):\n        self.rooms[name] = Room(name)",
+      "callers": []
+    },
+    "src_py/server.py:Server.join_room": {
+      "name": "join_room",
+      "full_name": "src_py/server.py:Server.join_room",
+      "parent_class": "Server",
+      "type": "method",
+      "file": "src_py/server.py",
+      "line": 8,
+      "end_line": 11,
+      "is_async": false,
+      "signature": "def join_room(self, room_name, client) -> None",
+      "args": [
+        {
+          "name": "self",
+          "type": "Any"
+        },
+        {
+          "name": "room_name",
+          "type": "Any"
+        },
+        {
+          "name": "client",
+          "type": "Any"
+        }
+      ],
+      "returns": "None",
+      "decorators": [],
+      "complexity": 2,
+      "docstring": "",
+      "calls": [
+        "get",
+        "add_client"
+      ],
+      "source": "    def join_room(self, room_name, client):\n        target_room = self.rooms.get(room_name)\n        if target_room:\n            target_room.add_client(client)",
+      "callers": []
+    }
+  },
+  "graph": {
+    "nodes": [
+      {
+        "id": "module:build_chat_server.py",
+        "name": "build_chat_server.py",
+        "type": "module",
+        "file": "build_chat_server.py",
+        "line": 1
+      },
+      {
+        "id": "build_chat_server.py:build_chat_server",
+        "name": "build_chat_server",
+        "type": "function",
+        "file": "build_chat_server.py",
+        "line": 4
+      },
+      {
+        "id": "module:src_ts/client.ts",
+        "name": "src_ts/client.ts",
+        "type": "module",
+        "file": "src_ts/client.ts",
+        "line": 1
+      },
+      {
+        "id": "src_ts/client.ts:Client",
+        "name": "Client",
+        "type": "class",
+        "file": "src_ts/client.ts",
+        "line": 1
+      },
+      {
+        "id": "module:src_ts/room.ts",
+        "name": "src_ts/room.ts",
+        "type": "module",
+        "file": "src_ts/room.ts",
+        "line": 1
+      },
+      {
+        "id": "src_ts/room.ts:Room",
+        "name": "Room",
+        "type": "class",
+        "file": "src_ts/room.ts",
+        "line": 1
+      },
+      {
+        "id": "module:src_ts/server.ts",
+        "name": "src_ts/server.ts",
+        "type": "module",
+        "file": "src_ts/server.ts",
+        "line": 1
+      },
+      {
+        "id": "src_ts/server.ts:Server",
+        "name": "Server",
+        "type": "class",
+        "file": "src_ts/server.ts",
+        "line": 1
+      },
+      {
+        "id": "module:src_py/client.py",
+        "name": "src_py/client.py",
+        "type": "module",
+        "file": "src_py/client.py",
+        "line": 1
+      },
+      {
+        "id": "src_py/client.py:Client",
+        "name": "Client",
+        "type": "class",
+        "file": "src_py/client.py",
+        "line": 1
+      },
+      {
+        "id": "src_py/client.py:Client.__init__",
+        "name": "__init__",
+        "type": "method",
+        "file": "src_py/client.py",
+        "line": 2
+      },
+      {
+        "id": "src_py/client.py:Client.send",
+        "name": "send",
+        "type": "method",
+        "file": "src_py/client.py",
+        "line": 5
+      },
+      {
+        "id": "module:src_py/room.py",
+        "name": "src_py/room.py",
+        "type": "module",
+        "file": "src_py/room.py",
+        "line": 1
+      },
+      {
+        "id": "src_py/room.py:Room",
+        "name": "Room",
+        "type": "class",
+        "file": "src_py/room.py",
+        "line": 1
+      },
+      {
+        "id": "src_py/room.py:Room.__init__",
+        "name": "__init__",
+        "type": "method",
+        "file": "src_py/room.py",
+        "line": 2
+      },
+      {
+        "id": "src_py/room.py:Room.add_client",
+        "name": "add_client",
+        "type": "method",
+        "file": "src_py/room.py",
+        "line": 6
+      },
+      {
+        "id": "src_py/room.py:Room.broadcast",
+        "name": "broadcast",
+        "type": "method",
+        "file": "src_py/room.py",
+        "line": 9
+      },
+      {
+        "id": "module:src_py/server.py",
+        "name": "src_py/server.py",
+        "type": "module",
+        "file": "src_py/server.py",
+        "line": 1
+      },
+      {
+        "id": "src_py/server.py:Server",
+        "name": "Server",
+        "type": "class",
+        "file": "src_py/server.py",
+        "line": 1
+      },
+      {
+        "id": "src_py/server.py:Server.__init__",
+        "name": "__init__",
+        "type": "method",
+        "file": "src_py/server.py",
+        "line": 2
+      },
+      {
+        "id": "src_py/server.py:Server.create_room",
+        "name": "create_room",
+        "type": "method",
+        "file": "src_py/server.py",
+        "line": 5
+      },
+      {
+        "id": "src_py/server.py:Server.join_room",
+        "name": "join_room",
+        "type": "method",
+        "file": "src_py/server.py",
+        "line": 8
+      }
+    ],
+    "edges": [
+      {
+        "source": "module:build_chat_server.py",
+        "target": "build_chat_server.py:build_chat_server",
+        "relation": "contains"
+      },
+      {
+        "source": "module:src_ts/client.ts",
+        "target": "src_ts/client.ts:Client",
+        "relation": "contains"
+      },
+      {
+        "source": "module:src_ts/room.ts",
+        "target": "src_ts/room.ts:Room",
+        "relation": "contains"
+      },
+      {
+        "source": "module:src_ts/server.ts",
+        "target": "src_ts/server.ts:Server",
+        "relation": "contains"
+      },
+      {
+        "source": "module:src_py/client.py",
+        "target": "src_py/client.py:Client",
+        "relation": "contains"
+      },
+      {
+        "source": "src_py/client.py:Client",
+        "target": "src_py/client.py:Client.__init__",
+        "relation": "contains"
+      },
+      {
+        "source": "src_py/client.py:Client",
+        "target": "src_py/client.py:Client.send",
+        "relation": "contains"
+      },
+      {
+        "source": "module:src_py/room.py",
+        "target": "src_py/room.py:Room",
+        "relation": "contains"
+      },
+      {
+        "source": "src_py/room.py:Room",
+        "target": "src_py/room.py:Room.__init__",
+        "relation": "contains"
+      },
+      {
+        "source": "src_py/room.py:Room",
+        "target": "src_py/room.py:Room.add_client",
+        "relation": "contains"
+      },
+      {
+        "source": "src_py/room.py:Room",
+        "target": "src_py/room.py:Room.broadcast",
+        "relation": "contains"
+      },
+      {
+        "source": "src_py/room.py:Room.broadcast",
+        "target": "src_py/client.py:Client.send",
+        "relation": "calls"
+      },
+      {
+        "source": "module:src_py/server.py",
+        "target": "src_py/server.py:Server",
+        "relation": "contains"
+      },
+      {
+        "source": "src_py/server.py:Server",
+        "target": "src_py/server.py:Server.__init__",
+        "relation": "contains"
+      },
+      {
+        "source": "src_py/server.py:Server",
+        "target": "src_py/server.py:Server.create_room",
+        "relation": "contains"
+      },
+      {
+        "source": "src_py/server.py:Server.create_room",
+        "target": "src_ts/room.ts:Room",
+        "relation": "calls"
+      },
+      {
+        "source": "src_py/server.py:Server.create_room",
+        "target": "src_py/room.py:Room",
+        "relation": "calls"
+      },
+      {
+        "source": "src_py/server.py:Server",
+        "target": "src_py/server.py:Server.join_room",
+        "relation": "contains"
+      },
+      {
+        "source": "src_py/server.py:Server.join_room",
+        "target": "src_py/room.py:Room.add_client",
+        "relation": "calls"
+      }
+    ]
+  },
+  "search_index": [
+    {
+      "id": "module:build_chat_server.py",
+      "name": "build_chat_server.py",
+      "type": "module",
+      "file": "build_chat_server.py",
+      "line": 1,
+      "doc": "",
+      "sig": ""
+    },
+    {
+      "id": "build_chat_server.py:build_chat_server",
+      "name": "build_chat_server",
+      "type": "function",
+      "file": "build_chat_server.py",
+      "line": 4,
+      "doc": "",
+      "sig": "def build_chat_server() -> None"
+    },
+    {
+      "id": "module:src_ts/client.ts",
+      "name": "src_ts/client.ts",
+      "type": "module",
+      "file": "src_ts/client.ts",
+      "line": 1,
+      "doc": "",
+      "sig": ""
+    },
+    {
+      "id": "src_ts/client.ts:Client",
+      "name": "Client",
+      "type": "class",
+      "file": "src_ts/client.ts",
+      "line": 1,
+      "doc": "",
+      "sig": ""
+    },
+    {
+      "id": "module:src_ts/room.ts",
+      "name": "src_ts/room.ts",
+      "type": "module",
+      "file": "src_ts/room.ts",
+      "line": 1,
+      "doc": "",
+      "sig": ""
+    },
+    {
+      "id": "src_ts/room.ts:Room",
+      "name": "Room",
+      "type": "class",
+      "file": "src_ts/room.ts",
+      "line": 1,
+      "doc": "",
+      "sig": ""
+    },
+    {
+      "id": "module:src_ts/server.ts",
+      "name": "src_ts/server.ts",
+      "type": "module",
+      "file": "src_ts/server.ts",
+      "line": 1,
+      "doc": "",
+      "sig": ""
+    },
+    {
+      "id": "src_ts/server.ts:Server",
+      "name": "Server",
+      "type": "class",
+      "file": "src_ts/server.ts",
+      "line": 1,
+      "doc": "",
+      "sig": ""
+    },
+    {
+      "id": "module:src_py/client.py",
+      "name": "src_py/client.py",
+      "type": "module",
+      "file": "src_py/client.py",
+      "line": 1,
+      "doc": "",
+      "sig": ""
+    },
+    {
+      "id": "src_py/client.py:Client",
+      "name": "Client",
+      "type": "class",
+      "file": "src_py/client.py",
+      "line": 1,
+      "doc": "",
+      "sig": ""
+    },
+    {
+      "id": "src_py/client.py:Client.__init__",
+      "name": "__init__",
+      "type": "method",
+      "file": "src_py/client.py",
+      "line": 2,
+      "doc": "",
+      "sig": "def __init__(self, client_id) -> None"
+    },
+    {
+      "id": "src_py/client.py:Client.send",
+      "name": "send",
+      "type": "method",
+      "file": "src_py/client.py",
+      "line": 5,
+      "doc": "",
+      "sig": "def send(self, message) -> None"
+    },
+    {
+      "id": "module:src_py/room.py",
+      "name": "src_py/room.py",
+      "type": "module",
+      "file": "src_py/room.py",
+      "line": 1,
+      "doc": "",
+      "sig": ""
+    },
+    {
+      "id": "src_py/room.py:Room",
+      "name": "Room",
+      "type": "class",
+      "file": "src_py/room.py",
+      "line": 1,
+      "doc": "",
+      "sig": ""
+    },
+    {
+      "id": "src_py/room.py:Room.__init__",
+      "name": "__init__",
+      "type": "method",
+      "file": "src_py/room.py",
+      "line": 2,
+      "doc": "",
+      "sig": "def __init__(self, name) -> None"
+    },
+    {
+      "id": "src_py/room.py:Room.add_client",
+      "name": "add_client",
+      "type": "method",
+      "file": "src_py/room.py",
+      "line": 6,
+      "doc": "",
+      "sig": "def add_client(self, client) -> None"
+    },
+    {
+      "id": "src_py/room.py:Room.broadcast",
+      "name": "broadcast",
+      "type": "method",
+      "file": "src_py/room.py",
+      "line": 9,
+      "doc": "",
+      "sig": "def broadcast(self, message) -> None"
+    },
+    {
+      "id": "module:src_py/server.py",
+      "name": "src_py/server.py",
+      "type": "module",
+      "file": "src_py/server.py",
+      "line": 1,
+      "doc": "",
+      "sig": ""
+    },
+    {
+      "id": "src_py/server.py:Server",
+      "name": "Server",
+      "type": "class",
+      "file": "src_py/server.py",
+      "line": 1,
+      "doc": "",
+      "sig": ""
+    },
+    {
+      "id": "src_py/server.py:Server.__init__",
+      "name": "__init__",
+      "type": "method",
+      "file": "src_py/server.py",
+      "line": 2,
+      "doc": "",
+      "sig": "def __init__(self) -> None"
+    },
+    {
+      "id": "src_py/server.py:Server.create_room",
+      "name": "create_room",
+      "type": "method",
+      "file": "src_py/server.py",
+      "line": 5,
+      "doc": "",
+      "sig": "def create_room(self, name) -> None"
+    },
+    {
+      "id": "src_py/server.py:Server.join_room",
+      "name": "join_room",
+      "type": "method",
+      "file": "src_py/server.py",
+      "line": 8,
+      "doc": "",
+      "sig": "def join_room(self, room_name, client) -> None"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# ==============================================================================
+# Dynamic DocGen — Universal CLI Wrapper
+# Runs DocGen from any project directory on Android Termux.
+# ==============================================================================
+DOCGEN_DIR="/data/data/com.termux/files/home/Projects/DocGen"
+exec /data/data/com.termux/files/usr/bin/python3 "$DOCGEN_DIR/docgen_cli.py" "$@"

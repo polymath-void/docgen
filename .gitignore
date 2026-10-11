@@ -1,0 +1,8 @@
+__pycache__/
+*.py[cod]
+.docgen_cache.json
+node_modules/
+dist/
+.venv/
+venv/
+*.egg-info/
