@@ -40,16 +40,24 @@ def format_ast_type_annotation(node: Optional[ast.AST]) -> str:
             return str(node.value)
         return "Any"
 
+def format_call_name(node: ast.AST) -> Optional[str]:
+    if isinstance(node, ast.Name):
+        return node.id
+    elif isinstance(node, ast.Attribute):
+        parent = format_call_name(node.value)
+        return f"{parent}.{node.attr}" if parent else node.attr
+    return None
+
 def extract_calls(node: ast.AST) -> List[str]:
     """Finds all function or method call identifiers in an AST subtree."""
     calls = []
     for child in ast.walk(node):
         if isinstance(child, ast.Call):
-            if isinstance(child.func, ast.Name):
-                calls.append(child.func.id)
-            elif isinstance(child.func, ast.Attribute):
-                calls.append(child.func.attr)
+            name = format_call_name(child.func)
+            if name:
+                calls.append(name)
     return list(dict.fromkeys(calls))
+
 
 class PythonASTExtractor:
     """Extracts deep symbol hierarchies from Python source code."""

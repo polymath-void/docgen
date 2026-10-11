@@ -6,3 +6,4 @@ dist/
 .venv/
 venv/
 *.egg-info/
+docs_manifest.json

@@ -106,5 +106,71 @@ def standalone_helper(x: int, y: int) -> int:
         self.assertGreater(len(manifest["graph"]["nodes"]), 0)
         self.assertGreater(len(manifest["graph"]["edges"]), 0)
 
+        # Verify diagnostics are populated
+        self.assertIn("diagnostics", manifest)
+        self.assertIn("summary", manifest["diagnostics"])
+        summary = manifest["diagnostics"]["summary"]
+        self.assertIn("integrity_score", summary)
+        self.assertIn("resolved_internal", summary)
+        self.assertIn("external_builtins", summary)
+
+    def test_reference_diagnostics_and_integrity(self):
+        """Validates detection of broken/unresolved calls, ambiguous references, and orphans."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            sample_code = '''
+import os
+import json
+
+class ServiceA:
+    def execute_task(self):
+        return "A"
+
+class ServiceB:
+    def execute_task(self):
+        return "B"
+
+def orchestrator(svc):
+    # 1. Clean external call
+    os.path.join("a", "b")
+    json.loads("{}")
+
+    # 2. Ambiguous / bulk call (matches ServiceA.execute_task and ServiceB.execute_task)
+    svc.execute_task()
+
+    # 3. Broken / Unresolved reference error
+    non_existent_function_xyz(123)
+
+def unused_orphan_symbol():
+    return 42
+'''
+            file_path = os.path.join(temp_dir, "service.py")
+            with open(file_path, "w", encoding="utf-8") as f:
+                f.write(sample_code)
+
+            compiler = DocGenCompiler(root_dir=temp_dir)
+            manifest = compiler.compile()
+
+            diag = manifest["diagnostics"]
+            summary = diag["summary"]
+
+            # Check unresolved reference detected
+            self.assertEqual(summary["unresolved"], 1)
+            self.assertEqual(diag["unresolved"][0]["called_name"], "non_existent_function_xyz")
+
+            # Check ambiguous reference detected
+            self.assertGreaterEqual(summary["ambiguous"], 1)
+            ambig_calls = [a["called_name"] for a in diag["ambiguous"]]
+            self.assertIn("svc.execute_task", ambig_calls)
+
+            # Check external builtins
+            self.assertGreaterEqual(summary["external_builtins"], 1)
+
+            # Check orphan detected
+            orphan_names = [o["name"] for o in diag["orphans"]]
+            self.assertIn("unused_orphan_symbol", orphan_names)
+
+            # Integrity score should reflect the broken call
+            self.assertLess(float(summary["integrity_score"].rstrip("%")), 100.0)
+
 if __name__ == "__main__":
     unittest.main()

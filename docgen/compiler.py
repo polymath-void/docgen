@@ -21,6 +21,44 @@ IGNORED_DIRS = {
 
 VALID_EXTENSIONS = {".py", ".js", ".jsx", ".ts", ".tsx"}
 
+PYTHON_BUILTINS = {
+    "print", "len", "range", "str", "int", "float", "bool", "list", "dict", "set",
+    "tuple", "open", "isinstance", "issubclass", "hasattr", "getattr", "setattr",
+    "delattr", "enumerate", "zip", "map", "filter", "any", "all", "sum", "min", "max",
+    "sorted", "reversed", "round", "abs", "repr", "iter", "next", "super", "type",
+    "id", "hash", "dir", "vars", "callable", "format", "input", "eval", "exec", "compile",
+    "join", "split", "splitlines", "strip", "lstrip", "rstrip", "replace", "append",
+    "extend", "insert", "pop", "remove", "clear", "index", "count", "sort", "reverse",
+    "get", "keys", "values", "items", "update", "setdefault", "startswith", "endswith",
+    "lower", "upper", "capitalize", "read", "write", "close", "readline", "readlines",
+    "seek", "tell", "flush", "add", "copy", "difference", "intersection", "union",
+    "groups", "group", "start", "end", "span", "finditer", "findall", "match", "search", "sub",
+    "hexdigest", "digest", "encode", "decode", "sleep",
+    "assertEqual", "assertNotEqual", "assertTrue", "assertFalse", "assertIn", "assertNotIn",
+    "assertIs", "assertIsNot", "assertIsNone", "assertIsNotNone", "assertIsInstance",
+    "assertRaises", "assertGreater", "assertGreaterEqual", "assertLess", "assertLessEqual",
+    "send_response", "send_header", "end_headers", "serve_forever",
+    "add_argument", "add_subparsers", "add_parser", "parse_args"
+}
+
+JS_BUILTINS = {
+    "console", "Math", "JSON", "Promise", "Array", "Object", "String", "Number", "Boolean",
+    "crypto", "window", "document", "navigator", "location", "history", "fetch",
+    "setTimeout", "setInterval", "clearTimeout", "clearInterval", "parseInt", "parseFloat",
+    "encodeURIComponent", "decodeURIComponent", "alert", "confirm", "prompt",
+    "addEventListener", "removeEventListener", "WebSocket", "RTCPeerConnection",
+    "RTCDataChannel", "RTCIceCandidate", "RTCSessionDescription", "Blob", "FileReader",
+    "URL", "URLSearchParams", "TextEncoder", "TextDecoder", "Uint8Array", "ArrayBuffer",
+    "Map", "Set", "WeakMap", "WeakSet", "Error", "TypeError", "RangeError", "require",
+    "push", "pop", "shift", "unshift", "slice", "splice", "concat", "includes",
+    "indexOf", "lastIndexOf", "forEach", "map", "filter", "reduce", "find", "findIndex",
+    "some", "every", "join", "split", "trim", "replace", "replaceAll", "substring",
+    "toLowerCase", "toUpperCase", "startsWith", "endsWith", "getElementById",
+    "querySelector", "querySelectorAll", "createElement", "appendChild", "removeChild",
+    "classList", "focus", "select", "send", "close", "open"
+}
+
+
 class DocGenCompiler:
     def __init__(self, root_dir: str, cache_file: str = ".docgen_cache.json"):
         self.root_dir = os.path.abspath(root_dir)
@@ -117,9 +155,32 @@ class DocGenCompiler:
                 symbols[fn_id] = fn
                 name_to_ids.setdefault(fn["name"], []).append(fn_id)
 
-        # 3. Resolve Call Graph & Build Graph (Nodes + Edges)
+        # 3. Resolve Call Graph & Build Graph with Reference Diagnostics
         nodes: List[Dict[str, Any]] = []
         edges: List[Dict[str, Any]] = []
+
+        diagnostics = {
+            "unresolved": [],
+            "ambiguous": [],
+            "external_builtins": {},
+            "orphans": []
+        }
+
+        total_calls_count = 0
+        resolved_internal_count = 0
+
+        # Map of file_path -> set of imported root names/aliases
+        file_imports = {}
+        for f in all_file_data:
+            imported_names = set()
+            for imp in f.get("imports", []):
+                if isinstance(imp, dict):
+                    alias = imp.get("alias") or imp.get("module", "")
+                    imported_names.add(alias.split(".")[0])
+                    if imp.get("module"):
+                        imported_names.add(imp.get("module").split(".")[0])
+                        imported_names.add(imp.get("module"))
+            file_imports[f["file"]] = imported_names
 
         for sid, sym in symbols.items():
             nodes.append({
@@ -155,21 +216,116 @@ class DocGenCompiler:
                                 "relation": "inherits"
                             })
 
-            # Call edges
+            # Call edges & Diagnostic checking
             calls = sym.get("calls", [])
-            sym["callers"] = []  # populate reverse callers
+            sym["callers"] = []
+            sym["unresolved_calls"] = []
+            sym["ambiguous_calls"] = []
+            file_imp = file_imports.get(sym["file"], set())
+
             for called_name in calls:
+                total_calls_count += 1
+                root_name = called_name.split(".")[0]
+                tail_name = called_name.split(".")[-1]
+
+                # 1. Exact match in repository symbols
                 if called_name in name_to_ids:
-                    for target_id in name_to_ids[called_name]:
+                    targets = name_to_ids[called_name]
+                    if len(targets) == 1:
+                        resolved_internal_count += 1
                         edges.append({
                             "source": sid,
-                            "target": target_id,
+                            "target": targets[0],
                             "relation": "calls"
                         })
+                    else:
+                        # Ambiguous / bulk references (matched across multiple classes/files)
+                        resolved_internal_count += 1
+                        sym["ambiguous_calls"].append({
+                            "name": called_name,
+                            "candidates": targets
+                        })
+                        diagnostics["ambiguous"].append({
+                            "source": sid,
+                            "source_name": sym["name"],
+                            "file": sym["file"],
+                            "line": sym.get("line", 1),
+                            "called_name": called_name,
+                            "candidates": targets
+                        })
+                        for target_id in targets:
+                            edges.append({
+                                "source": sid,
+                                "target": target_id,
+                                "relation": "calls_ambiguous"
+                            })
+                # 2. Method invocation on self, this, or cls
+                elif called_name.startswith(("self.", "this.", "cls.")) and tail_name in name_to_ids:
+                    targets = name_to_ids[tail_name]
+                    resolved_internal_count += 1
+                    edges.append({
+                        "source": sid,
+                        "target": targets[0],
+                        "relation": "calls"
+                    })
+                # 3. Call to an imported module or package
+                elif root_name in file_imp or called_name in file_imp:
+                    diagnostics["external_builtins"][called_name] = diagnostics["external_builtins"].get(called_name, 0) + 1
+                # 4. Standard runtime built-in (Python or JS)
+                elif (
+                    called_name in PYTHON_BUILTINS or
+                    called_name in JS_BUILTINS or
+                    tail_name in PYTHON_BUILTINS or
+                    tail_name in JS_BUILTINS or
+                    root_name in PYTHON_BUILTINS or
+                    root_name in JS_BUILTINS
+                ):
+                    diagnostics["external_builtins"][called_name] = diagnostics["external_builtins"].get(called_name, 0) + 1
+                # 5. Method call on object instance matching project symbols
+                elif "." in called_name and tail_name in name_to_ids:
+                    targets = name_to_ids[tail_name]
+                    if len(targets) == 1:
+                        resolved_internal_count += 1
+                        edges.append({
+                            "source": sid,
+                            "target": targets[0],
+                            "relation": "calls"
+                        })
+                    else:
+                        resolved_internal_count += 1
+                        sym["ambiguous_calls"].append({
+                            "name": called_name,
+                            "candidates": targets
+                        })
+                        diagnostics["ambiguous"].append({
+                            "source": sid,
+                            "source_name": sym["name"],
+                            "file": sym["file"],
+                            "line": sym.get("line", 1),
+                            "called_name": called_name,
+                            "candidates": targets
+                        })
+                        for target_id in targets:
+                            edges.append({
+                                "source": sid,
+                                "target": target_id,
+                                "relation": "calls_ambiguous"
+                            })
+                # 6. Truly Unresolved / Broken Reference!
+                else:
+                    sym["unresolved_calls"].append(called_name)
+                    diagnostics["unresolved"].append({
+                        "source": sid,
+                        "source_name": sym["name"],
+                        "file": sym["file"],
+                        "line": sym.get("line", 1),
+                        "called_name": called_name
+                    })
+
 
         # Reverse caller population
         for edge in edges:
-            if edge["relation"] == "calls":
+            if edge["relation"] in ["calls", "calls_ambiguous"]:
                 target = edge["target"]
                 source = edge["source"]
                 if target in symbols:
@@ -177,6 +333,28 @@ class DocGenCompiler:
                         symbols[target]["callers"] = []
                     if source not in symbols[target]["callers"]:
                         symbols[target]["callers"].append(source)
+
+        # Detect Orphan symbols (dead code / unreferenced internal symbols)
+        ENTRY_NAMES = {"main", "__init__", "handler", "do_GET", "do_POST", "setUpClass", "tearDownClass", "run", "boot"}
+        for sid, sym in symbols.items():
+            if sym["type"] in ["function", "method", "class"]:
+                if len(sym.get("callers", [])) == 0 and sym["name"] not in ENTRY_NAMES and not sym["name"].startswith("test_"):
+                    diagnostics["orphans"].append({
+                        "id": sid,
+                        "name": sym["name"],
+                        "type": sym["type"],
+                        "file": sym["file"],
+                        "line": sym.get("line", 1)
+                    })
+
+        # Compute Reference Integrity Metrics
+        total_eval = max(1, total_calls_count)
+        integrity_score = round(((total_eval - len(diagnostics["unresolved"])) / total_eval) * 100, 1)
+
+        stats["integrity_score"] = f"{integrity_score}%"
+        stats["unresolved_refs"] = len(diagnostics["unresolved"])
+        stats["ambiguous_refs"] = len(diagnostics["ambiguous"])
+        stats["orphan_symbols"] = len(diagnostics["orphans"])
 
         # 4. Generate Inverted Search Index
         search_index = []
@@ -202,6 +380,21 @@ class DocGenCompiler:
                 "build_duration_sec": elapsed,
                 "stats": stats
             },
+            "diagnostics": {
+                "summary": {
+                    "total_calls": total_calls_count,
+                    "resolved_internal": resolved_internal_count,
+                    "unresolved": len(diagnostics["unresolved"]),
+                    "ambiguous": len(diagnostics["ambiguous"]),
+                    "external_builtins": sum(diagnostics["external_builtins"].values()),
+                    "orphan_symbols": len(diagnostics["orphans"]),
+                    "integrity_score": f"{integrity_score}%"
+                },
+                "unresolved": diagnostics["unresolved"],
+                "ambiguous": diagnostics["ambiguous"],
+                "external_builtins": diagnostics["external_builtins"],
+                "orphans": diagnostics["orphans"]
+            },
             "symbols": symbols,
             "graph": {
                 "nodes": nodes,
@@ -215,4 +408,5 @@ class DocGenCompiler:
         manifest = enricher.enrich_all()
 
         return manifest
+
 
