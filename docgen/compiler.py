@@ -11,6 +11,7 @@ import time
 from typing import Dict, List, Any, Set
 from docgen.extractor import extract_file_symbols
 from docgen.merkle import MerkleASTCache
+from docgen.enricher import DocGenEnricher
 
 IGNORED_DIRS = {
     ".git", "node_modules", "dist", "build", "__pycache__",
@@ -209,4 +210,9 @@ class DocGenCompiler:
             "search_index": search_index
         }
 
+        # 5. Enrich Symbols with Topological Guides (Layer 2)
+        enricher = DocGenEnricher(manifest)
+        manifest = enricher.enrich_all()
+
         return manifest
+
